@@ -7,6 +7,8 @@
 '''
 
 from pymongo import MongoClient
+from datetime import datetime
+import dateutil.parser
 
 client = MongoClient()
 client = MongoClient('localhost', 27017)
@@ -24,8 +26,6 @@ def add_item_to_cart(cart_id, sku, qty, details):
           '$push': {
               'items': {'sku': sku, 'qty':qty, 'details': details } } },
         w=1)
-    if not result['updatedExisting']:
-        raise CartInactive()
 
     # Update the inventory
     result = db.inventory.update(
@@ -40,7 +40,8 @@ def add_item_to_cart(cart_id, sku, qty, details):
         db.cart.update(
             {'_id': cart_id },
             { '$pull': { 'items': {'sku': sku } } })
-        raise InadequateInventory()
+
+
 def update_quantity(cart_id, sku, old_qty, new_qty):
     now = datetime.utcnow()
     delta_qty = new_qty - old_qty
@@ -100,7 +101,7 @@ def checkout(cart_id):
 
 def expire_carts(timeout):
     now = datetime.utcnow()
-    threshold = now - timedelta(seconds=timeout)
+    threshold = now
 
     # Lock and find all the expiring carts
     db.cart.update(
@@ -160,6 +161,7 @@ def cleanup_inventory(timeout):
                   'carted.qty': carted_item['qty'] },
                 { '$inc': { 'qty': carted_item['qty'] },
                   '$pull': { 'carted': { 'cart_id': cart_id } } })
+
 def cleanup_inventory(timeout):
     now = datetime.utcnow()
     threshold = now - timedelta(seconds=timeout)
@@ -195,7 +197,7 @@ def cleanup_inventory(timeout):
                   'carted.qty': carted_item['qty'] },
                 { '$inc': { 'qty': carted_item['qty'] },
                   '$pull': { 'carted': { 'cart_id': cart_id } } })
-
+"""
 item = {
     "_id": '00e8da9b',
     "qty": 16,
@@ -217,4 +219,8 @@ item2 = {
 }
 collection.insert_one(item)
 collection.insert_one(item2)
+"""
+
+add_item_to_cart(123, '00e8da9b', 2, 'details')
+expire_carts(20)
 
