@@ -3,7 +3,7 @@
 	Base de Datos
 		Marcos Gutierrez		17909
 		David Valenzuela		171001
-		Fernando Hengstenberg	17699	
+		Fernando Hengstenberg	17699
 '''
 
 from pymongo import MongoClient
@@ -49,9 +49,27 @@ products = {
   },
 }
 
+movie = {
+		'sku': "00e8da9d",
+		'type': "Film",
+		'asin': "B000P0J0AQ",
+
+		'shipping': { ... },
+
+		'pricing': { ... },
+
+		'details': {
+		'title': "The Matrix",
+		'director': [ "Andy Wachowski", "Larry Wachowski" ],
+		'writer': [ "Andy Wachowski", "Larry Wachowski" ],
+		'aspect_ratio': "1.66:1"
+		},
+}
 # Insertamos la colección
 collection.insert_one(products)
-
+#collection.insert_one(movie)
+'''
+Primer Query del producto
 query = db.products.find(
 	{
 		'type':'Audio Album',
@@ -63,3 +81,34 @@ query = query.sort(
 	[('details.issue_date', -1)]
 )
 
+
+example = db.products.create_index(
+  [
+    (' type', 1),
+    (' details.genre', 1),
+    (' details.issue_date', -1)
+  ]
+)
+'''
+
+'''
+Segundo Query
+query = db.products.find(
+  {
+    'pricing.pct_savings': {'$gt': 25 }
+  }
+)
+
+query = query.sort(
+  [('pricing.pct_savings', -1)]
+)
+'''
+import re
+re_hacker = re.compile(r'.*hacker.*', re.IGNORECASE)
+
+query = db.products.find({'type': 'Film', 'title': re_hacker})
+query = query.sort([('details.issue_date', -1)])
+
+
+for q in query:
+  print(q)
